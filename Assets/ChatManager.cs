@@ -9,11 +9,12 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class ChatManager : MonoBehaviour {
-    public string ipAddress = "10.18.59.166";//IP地址
+    public string ipAddress = "192.168.1.23";//IP地址
     public int port = 7788;//端口号
     public InputField InputField;//输入框组件
     private Socket clientSocket;
     private Text chatDetail;//显示已发送消息列表的文本框组件
+    private Text serverMessage;
     public float timeStart;//弹出框的开始时间
     public float timeEnd;//弹出框的结束时间
     public Rect windowRect = new Rect(95, 125, 120, 75);//弹出框显示的位置
@@ -22,10 +23,11 @@ public class ChatManager : MonoBehaviour {
     public string text;//输入文本
     public Thread t;//接收消息的线程
     public byte[] data=new byte[1024];//接收消息的数据容器
-    public string message = "";
+    public string message = "";//服务器端的消息
     void Awake() {
         InputField = GameObject.Find("Input").GetComponent<InputField>();//获取输入框组件
         chatDetail = GameObject.Find("chatDetail").GetComponent<Text>();
+        serverMessage = GameObject.Find("serverMessage").GetComponent<Text>();
     }
     void Start() {
         ConnectToServer();//建立连接
@@ -45,11 +47,10 @@ public class ChatManager : MonoBehaviour {
             InputField.DeactivateInputField();//禁用输入(光标无法选中)
         }
 
-        if (message!="") {
-            chatDetail.text += message + "\n";
+        if (!String.IsNullOrEmpty(message)) {
+            serverMessage.text += "\n" + message;
             message = "";
         }
-
     }
     void ConnectToServer() {
         clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -97,7 +98,7 @@ public class ChatManager : MonoBehaviour {
         text = message;
         clientSocket.Send(data);//Socket发送byte数据包
     }
-    public void Destroy() {
+    public void OnDestroy() {
         clientSocket.Shutdown(SocketShutdown.Both);//接收和发送全部关闭
         clientSocket.Close();
     }
